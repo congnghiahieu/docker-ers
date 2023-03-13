@@ -1,0 +1,62 @@
+version: "3"
+
+volumes:
+  result:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      #Specify mount path to get result on your host machine
+      # On Windows, you must use absolute path
+      # On Linux or MacOS, you can use both absolute and relative path
+      # Ex: D:/Workspace/apiTesting/Docker-Concurrency/result
+      device: D:/Workspace/apiTesting/Docker-Concurrency/result
+
+services:
+  # Schemathesis test service
+  docker-schema:
+    build:
+      dockerfile: Dockerfile
+      context: ./docker-schemathesis
+    container_name: c-schema1
+    hostname: schemathesis
+    command: [/bin/bash, -c, "/home/run.sh"]
+    volumes:
+      - result:/home/result
+    environment:
+      - API_SPEC_URL=https://raw.githubusercontent.com/congnghiahieu/docker-ers/master/demospec.json
+    env_file:
+      - ./docker-schemathesis/schemathesis.env
+  # Evomaster test service
+  docker-evo:
+    build:
+      dockerfile: Dockerfile
+      context: ./docker-evomaster
+    container_name: c-evo1
+    hostname: evomaster
+    command: [/bin/bash, -c, "/home/run.sh"]
+    volumes:
+      - result:/home/result
+    environment:
+      # https://api.apis.guru/v2/specs/6-dot-authentiqio.appspot.com/6/openapi.json
+      # https://example.schemathesis.io/openapi.json
+      # https://raw.githubusercontent.com/congnghiahieu/docker-ers/master/demospec.json
+      # https://restlerdemoserver.pagekite.me
+      - API_SPEC_URL=https://raw.githubusercontent.com/congnghiahieu/docker-ers/master/demospec.json
+    env_file:
+      - ./docker-evomaster/evomaster.env
+
+  # Restler test service
+  docker-restler:
+    build:
+      dockerfile: Dockerfile
+      context: ./docker-restler
+    container_name: c-restler1
+    hostname: restler
+    command: [/bin/bash, -c, "/home/run.sh"]
+    volumes:
+      - result:/home/result
+    environment:
+      - API_SPEC_URL=https://raw.githubusercontent.com/congnghiahieu/docker-ers/master/demospec.json
+    env_file:
+      - ./docker-restler/restler.env

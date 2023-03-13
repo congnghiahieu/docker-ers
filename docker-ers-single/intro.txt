@@ -1,0 +1,79 @@
+This is introduction, to display this again type "intro"
+Container includes:
+- Java 11
+- Python 3.10
+- Dotnet 6.0
+- evomaster.jar: /home/Evomaster
+- restler binary: /home/Restler-Fuzzer/restler_bin/restler/Restler
+- schemathesis: installed globally by pip
+
+A. How to run Evomaster in Black-box mode
+Command: evomaster --blackBox true --outputFormat JAVA_UNIT_5 --maxTime <testDuration> --ratePerMinute <numberOfReqPerMinute> --outputFolder <pathToOut> --bbSwaggerUrl <apiSpecUrl>
+Example: evomaster --blackBox true --outputFormat JAVA_JUNIT_5 --maxTime 1h15m30s --ratePerMinute 60 --outputFolder /home/Evomaster/result/4 --bbSwaggerUrl https://api.apis.guru/v2/specs/6-dot-authentiqio.appspot.com/6/openapi.yaml
+For more details, please visits: https://github.com/EMResearch/EvoMaster
+
+B. How to run Restler-Fuzzer
+1. Compile your API specification
+Command: restler compile --api_spec <pathToYourSpec>
+Example: restler compile --api_spec /home/Restler-Fuzzer/demoSpec.json
+Note: After compiling your API specification, you will have Compile folder which includes 3 important files: grammar.py, dict.json, engine_settings.json
+
+2. Run Test method
+Command: restler test --grammar_file <pathToGrammarPy> --dictionary_file <pathToDictJson> --settings <pathToEngineSettingsJson> --no_ssl
+Example:
+mkdir /home/Restler-Fuzzer/demo
+cd /home/Restler-Fuzzer/demo
+restler compile --api_spec /home/Restler-Fuzzer/demoSpec.json
+restler test --grammar_file Compile/grammar.py --dictionary_file Compile/dict.json --settings Compile/engine_settings.json --no_ssl
+Note: We will get Test folder after process finished
+
+3. Run FuzzLean method
+The same as Test method above, but instead of "test" we use "fuzz-lean"
+Example: restler fuzz-lean --grammar_file Compile/grammar.py --dictionary_file Compile/dict.json --settings Compile/engine_settings.json --no_ssl
+Note: We will get FuzzLean folder after process finished
+
+4. Run Fuzz method
+Fuzz method require 1 more parameter "time_budget" which illustrate the duration of Fuzz test (in hour)
+Example: restler fuzz --grammar_file Compile/grammar.py --dictionary_file Compile/dict.json --settings Compile/engine_settings.json --no_ssl --time_budget 1
+Note: We will get Fuzz folder after process finished
+
+5. Run Restler-Fuzzer with demo_server
+Note: This demo is the same as one in Restler-Fuzzer github repository
+- Create virtual enviroment and run demo server:
+cd /home/Restler-Fuzzer/demo_server
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python3 demo_server/app.py
+Note: To exit virtual environment: source venv/bin/activate.csh
+Note: server run in watch mode so you need to execute new bash to continue next step: (from outside container) docker exec containerId bash
+- Compile demo API spec:
+mkdir /home/Restler-Fuzzer/demo-server-test
+cp /home/Restler-Fuzzer/demo_server/swagger.json /home/Restler-Fuzzer/demo-server-test
+cd /home/Restler-Fuzzer/demo-server-test
+reslter compile --api_spec /home/Restler-Fuzzer/demo-server-test/swagger.json
+- After compiling you will have Compile folder includes grammar.py, dict.json, engine_settings.json and ready for testing:
+Test method: restler test --grammar_file Compile/grammar.py --dictionary_file Compile/dict.json --settings Compile/engine_settings.json --no_ssl
+FuzzLean method: restler fuzz-lean --grammar_file Compile/grammar.py --dictionary_file Compile/dict.json --settings Compile/engine_settings.json --no_ssl
+Fuzz method: restler fuzz --grammar_file Compile/grammar.py --dictionary_file Compile/dict.json --settings Compile/engine_settings.json --no_ssl --time_budget 1
+
+6. Test your own API
+- Make sure your server is ready
+- Compile you API specification
+- Run 3 method: Test, FuzzLean, Fuzz
+For more details, please visits: https://github.com/microsoft/restler-fuzzer
+
+C. How to run schemathesis
+Note: schemathesis is installed globally by pip
+Command: st run --verbosity --workers <numberOfWorkers> --checks all --stateful=links <apiSpecUrl>
+Note: you can speed up the testing process by distributing all tests among multiple threads via the -w / --workers option, but that it is not guaranteed to improve performance because it depends on your application behavior.
+Example:
+st run --checks all https://example.schemathesis.io/openapi.json
+st run --verbosity --workers 8 --checks all --stateful=links https://api.apis.guru/v2/specs/6-dot-authentiqio.appspot.com/6/openapi.json
+Note: schemathesis display human readable result on console and human unreadable folder .hypothesis
+For more details, please visits: https://schemathesis.readthedocs.io/en/stable/
+
+D. Alias
+evomaster="java -jar /home/Evomaster/evomaster.jar"
+restler="/home/Restler-Fuzzer/restler_bin/restler/Restler"
+help="cat /home/intro.txt"
